@@ -381,3 +381,26 @@ def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels=
     union_areas = boxes1_areas + boxes2_areas - intersection_areas
 
     return intersection_areas / union_areas
+
+
+def distances_between_centers(boxes1, boxes2, coords='centroids'):
+    assert boxes2.ndim == 1
+    boxes2 = np.expand_dims(boxes2, axis=0)
+    if coords == 'centroids':
+        boxes1 = convert_coordinates(boxes1, start_index=0, conversion='centroids2corners')
+        boxes2 = convert_coordinates(boxes2, start_index=0, conversion='centroids2corners')
+        coords = 'corners'
+
+    center_x1 = (boxes1[:, 0] + boxes1[:, 2]) / 2
+    center_y1 = (boxes1[:, 1] + boxes1[:, 3]) / 2
+    center_x2 = (boxes2[0, 0] + boxes2[0, 2]) / 2
+    center_y2 = (boxes2[0, 1] + boxes2[0, 3]) / 2
+    d = (center_x1 - center_x2) ** 2 + (center_y1 - center_y2) ** 2
+
+    cx1 = np.clip(boxes1[:, 0], a_min=None, a_max=boxes2[0, 0])
+    cy1 = np.clip(boxes1[:, 1], a_min=None, a_max=boxes2[0, 1])
+    cx2 = np.clip(boxes1[:, 2], a_min=boxes2[0, 2], a_max=None)
+    cy2 = np.clip(boxes1[:, 3], a_min=boxes2[0, 3], a_max=None)
+    c = (cx2 - cx1) ** 2 + (cy2 - cy1) ** 2
+
+    return d/c
